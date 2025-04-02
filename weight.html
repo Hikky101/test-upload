@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体重管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+        
+        h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title svg {
+            margin-right: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 1em;
+        }
+        
+        /* 体重選択肢のスタイル */
+        select#weightInput option[data-main="true"] {
+            font-weight: bold;
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+        
+        select#weightInput option {
+            padding: 8px 15px;
+        }
+        
+        select#weightInput option:hover {
+            background-color: #f0f8ff !important;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background-color: #e6f7ff;
+            color: var(--success);
+        }
+        
+        .badge-danger {
+            background-color: #fff0f3;
+            color: var(--danger);
+        }
+        
+        .btn-delete {
+            background-color: #f8f9fa;
+            color: var(--danger);
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            width: auto;
+        }
+        
+        .btn-delete:hover {
+            background-color: #fff0f3;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            select#weightInput option {
+                padding: 12px 15px;
+            }
+        }
+        
+        /* アニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>体重管理</h1>
+            <p class="subtitle">輝け自分</p>
+        </header>
+        
+        <div class="card fade-in">
+            <h2 class="card-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 8C16 10.21 14.21 12 12 12C9.79 12 8 10.21 8 8C8 5.79 9.79 4 12 4C14.21 4 16 5.79 16 8Z" fill="#4361ee"/>
+                    <path d="M12 14C7.58 14 4 15.79 4 18V20H20V18C20 15.79 16.42 14 12 14Z" fill="#4361ee"/>
+                </svg>
+                目標設定
+            </h2>
+            <div class="form-group">
+                <label for="goalInput">目標体重 (kg)</label>
+                <input type="number" id="goalInput" value="55" step="0.1" min="30" max="200">
+            </div>
+        </div>
+        
+        <div class="card fade-in" style="animation-delay: 0.1s;">
+            <h2 class="card-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="#4361ee"/>
+                    <path d="M7 12H9V17H7V12ZM11 7H13V17H11V7ZM15 10H17V17H15V10Z" fill="#4361ee"/>
+                </svg>
+                今日の記録
+            </h2>
+            <div class="form-group">
+                <label for="dateInput">日付</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="form-group">
+                <label for="weightInput">体重 (kg)</label>
+                <select id="weightInput">
+                    <option value="">選択してください</option>
+                    <script>
+                        // メイン表示用（整数kg）
+                        const mainWeights = [40, 50, 60, 70, 80, 90, 100];
+                        
+                        // 選択肢生成
+                        mainWeights.forEach(weight => {
+                            // メイン数値（太字表示）
+                            document.write(`
+                                <option 
+                                    value="${weight}.0" 
+                                    data-main="true"
+                                    style="font-weight:bold">
+                                    ${weight} kg
+                                </option>
+                            `);
+                            
+                            // 詳細数値（0.1kg刻み）
+                            for (let i = 1; i <= 9; i++) {
+                                const val = weight + i * 0.1;
+                                document.write(`
+                                    <option value="${val.toFixed(1)}">
+                                        ${val.toFixed(1)} kg
+                                    </option>
+                                `);
+                            }
+                        });
+                    </script>
+                </select>
+            </div>
+            <button id="addButton">記録を追加</button>
+        </div>
+        
+        <div class="card fade-in" style="animation-delay: 0.2s;">
+            <h2 class="card-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17ZM19 19H5V5H19V19.1M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3Z" fill="#4361ee"/>
+                </svg>
+                記録一覧
+            </h2>
+            <div class="table-responsive">
+                <table id="weightTable">
+                    <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>体重</th>
+                            <th>目標差</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card fade-in" style="animation-delay: 0.3s;">
+            <h2 class="card-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM9 17H7V10H9V17ZM13 17H11V7H13V17ZM17 17H15V13H17V17Z" fill="#4361ee"/>
+                </svg>
+                進捗グラフ
+            </h2>
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // データ保存機能
+        function saveData(data) {
+            localStorage.setItem('weightData', JSON.stringify(data));
+        }
+
+        function loadData() {
+            const data = localStorage.getItem('weightData');
+            return data ? JSON.parse(data) : [];
+        }
+
+        let weightData = loadData();
+        let goalWeight = 55;
+
+        // 目標体重を読み込み
+        document.getElementById('goalInput').addEventListener('change', function() {
+            goalWeight = parseFloat(this.value);
+            updateTable();
+            updateChart();
+        });
+
+        // 記録追加
+        document.getElementById('addButton').addEventListener('click', () => {
+            const date = document.getElementById('dateInput').value;
+            const weight = parseFloat(document.getElementById('weightInput').value);
+
+            if (date && !isNaN(weight)) {
+                weightData.push({ date, weight });
+                saveData(weightData);
+                updateTable();
+                updateChart();
+                document.getElementById('weightInput').value = '';
+                
+                // 成功アニメーション
+                const button = document.getElementById('addButton');
+                button.textContent = '✓ 記録完了';
+                button.style.backgroundColor = '#4bb543';
+                setTimeout(() => {
+                    button.textContent = '記録を追加';
+                    button.style.backgroundColor = '';
+                }, 1500);
+            } else {
+                alert('日付と体重を正しく選択してください！');
+            }
+        });
+
+        // テーブル更新
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            const currentGoal = parseFloat(document.getElementById('goalInput').value);
+            tbody.innerHTML = '';
+
+            // 日付でソート（新しい順）
+            weightData.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            weightData.forEach((entry, index) => {
+                const difference = entry.weight - currentGoal;
+                const differenceText = difference > 0 
+                    ? `<span class="badge badge-danger">+${difference.toFixed(1)}kg</span>`
+                    : `<span class="badge badge-success">${difference.toFixed(1)}kg</span>`;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(entry.date)}</td>
+                    <td><strong>${entry.weight}</strong> kg</td>
+                    <td>${differenceText}</td>
+                    <td><button class="btn-delete" onclick="deleteEntry(${index})">削除</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 日付フォーマット
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`;
+        }
+
+        // 削除機能
+        function deleteEntry(index) {
+            if (confirm('この記録を削除しますか？')) {
+                weightData.splice(index, 1);
+                saveData(weightData);
+                updateTable();
+                updateChart();
+            }
+        }
+
+        // グラフ表示
+        let weightChart = null;
+        function updateChart() {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            const dates = weightData.map(entry => formatDate(entry.date)).reverse();
+            const weights = weightData.map(entry => entry.weight).reverse();
+            const goal = parseFloat(document.getElementById('goalInput').value);
+            const goalLine = new Array(dates.length).fill(goal);
+
+            if (weightChart) weightChart.destroy();
+
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: '体重 (kg)',
+                            data: weights,
+                            borderColor: '#4361ee',
+                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            fill: true,
+                            pointBackgroundColor: '#4361ee',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: '目標体重',
+                            data: goalLine,
+                            borderColor: '#f72585',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: false,
+                            min: Math.min(...weights, goal) - 2,
+                            max: Math.max(...weights, goal) + 2,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            padding: 12,
+                            usePointStyle: true
+                        }
+                    },
+                    animation: {
+                        duration: 1000
+                    }
+                }
+            });
+        }
+
+        // 初期表示
+        window.addEventListener('load', () => {
+            document.getElementById('dateInput').valueAsDate = new Date();
+            
+            // 最後に記録した体重を自動選択
+            const lastWeight = weightData[0]?.weight;
+            if (lastWeight) {
+                const select = document.getElementById('weightInput');
+                const options = select.options;
+                for (let i = 0; i < options.length; i++) {
+                    if (parseFloat(options[i].value).toFixed(1) === parseFloat(lastWeight).toFixed(1)) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            updateTable();
+            updateChart();
+        });
+    </script>
+</body>
+</html>
